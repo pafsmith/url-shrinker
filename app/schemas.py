@@ -7,7 +7,7 @@ class LinkCreate(BaseModel):
 
 class Link(BaseModel):
     id: int
-    short_url: str
+    short_code: str
     original_url: HttpUrl
     visit_count: int
 
