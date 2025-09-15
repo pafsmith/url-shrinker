@@ -1,4 +1,5 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, EmailStr
+from typing import Union
 
 
 class LinkCreate(BaseModel):
@@ -13,3 +14,25 @@ class Link(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class User(BaseModel):
+    id: int
+    email: EmailStr
+
+    class Config:
+        from_attributes = True
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    user_id: Union[int, None] = None

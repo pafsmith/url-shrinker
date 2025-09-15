@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import crud, models, schemas
 from .database import SessionLocal, engine
+from .routers import auth as auth_router
+
 
 # Create the FastAPI app instance
 app = FastAPI(
@@ -21,6 +23,7 @@ async def get_db():
 
 
 # --- API Endpoints ---
+app.include_router(auth_router.router, prefix="/api/auth", tags=["Authentication"])
 
 
 @app.post(

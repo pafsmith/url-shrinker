@@ -1,7 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from passlib.context import CryptContext
 
 from . import models, schemas, utils
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 async def get_link_by_short_code(db: AsyncSession, short_code: str):
@@ -49,3 +53,19 @@ async def create_short_link(db: AsyncSession, link: schemas.LinkCreate) -> model
     await db.refresh(db_link)
 
     return db_link
+
+
+async def create_user(db: AsyncSession, user: schemas.UserCreate):
+    """Creates a new user in the database with a hashed password."""
+    hashed_password = pwd_context.hash(user.password)
+    db_user = models.User(email=user.email, password_hash=hashed_password)
+    db.add(db_user)
+    await db.commit()
+    await db.refresh(db_user)
+    return db_user
+
+
+async def get_user_by_email(db: AsyncSession, email: str):
+    """Fetches a user by their email address."""
+    result = await db.execute(select(models.User).filter(models.User.email == email))
+    return result.scalars().first()
