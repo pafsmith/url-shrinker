@@ -109,4 +109,9 @@ curl -X POST "[http://127.0.0.1:8000/api/links](http://127.0.0.1:8000/api/links)
 }
 ```
 
+### TODO
 
+- Add user authentication
+- Implement redis cache
+- Migrate click tracking to background job
+- Click analytics
