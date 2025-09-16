@@ -22,7 +22,7 @@ jobs:
       - name: Install build tools
         run: |
           pip install uv
-          uv pip install ruff
+          uv pip install ruff --system
 
       - name: Lint with ruff
         run: |
