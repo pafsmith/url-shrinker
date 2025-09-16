@@ -1,10 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import crud, schemas, auth, cache
+from app import crud, schemas, auth
 from app.database import SessionLocal
-from app.tasks import log_click_task
 
 router = APIRouter()
 

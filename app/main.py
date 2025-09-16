@@ -2,8 +2,8 @@ from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from . import crud, models, schemas, auth, cache
-from .database import SessionLocal, engine
+from . import crud, cache
+from .database import SessionLocal
 from .routers import auth as auth_router, links as links_router
 from .tasks import log_click_task
 
