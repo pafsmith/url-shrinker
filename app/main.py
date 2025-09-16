@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from . import crud, models, schemas, auth
+from . import crud, models, schemas, auth, cache
 from .database import SessionLocal, engine
 from .routers import auth as auth_router
 from .tasks import log_click_task
@@ -51,17 +51,38 @@ async def redirect_to_url(
     """
     Redirects to the original URL associated with the short code.
     """
-    db_link = await crud.get_link_by_short_code(db=db, short_code=short_code)
 
-    if db_link is None:
+    link_id_to_log = None
+    url_to_redirect = None
+
+    cached_link_data = await cache.get_link_from_cache(short_code)
+    if cached_link_data:
+        print(f"CACHE HIT for {short_code}")
+        link_id_to_log = cached_link_data.get("link_id")
+        url_to_redirect = cached_link_data.get("original_url")
+    else:
+        print(f"CACHE MISS for {short_code}")
+        db_link = await crud.get_link_by_short_code(db, short_code=short_code)
+        if db_link:
+            link_id_to_log = db_link.id
+            url_to_redirect = db_link.original_url
+            await cache.set_link_in_cache(
+                short_code=db_link.short_code,
+                link_id=db_link.id,
+                original_url=db_link.original_url,
+            )
+
+    if not url_to_redirect or not link_id_to_log:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Short link not found."
         )
 
     log_click_task.send(
-        db_link.id, request.client.host, request.headers.get("user-agent", "Unknown")
+        link_id_to_log,
+        request.client.host,
+        request.headers.get("user-agent", "Unknown"),
     )
-    return RedirectResponse(url=db_link.original_url)
+    return RedirectResponse(url=url_to_redirect)
 
 
 @app.get("/api/links/{short_code}", response_model=schemas.Link)
