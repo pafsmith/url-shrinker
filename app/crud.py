@@ -1,7 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func, cast, Date
 from passlib.context import CryptContext
 from typing import Union
+
+from datetime import date, timedelta
 from . import models, schemas, utils
 
 
@@ -100,3 +103,33 @@ async def log_click_to_db(
     except Exception as e:
         await db.rollback()
         print(f"Error logging click: {e}")
+
+
+async def get_link_analytics(db: AsyncSession, link_id: int):
+    total_clicks_query = select(func.count(models.Click.id)).where(
+        models.Click.link_id == link_id
+    )
+    total_clicks_result = await db.execute(total_clicks_query)
+    total_clicks = total_clicks_result.scalar_one_or_none() or 0
+
+    thirty_days_ago = date.today() - timedelta(days=30)
+    clicks_by_day_query = (
+        select(
+            cast(models.Click.clicked_at, Date).label("date"),
+            func.count(models.Click.id).label("count"),
+        )
+        .where(models.Click.link_id == link_id)
+        .where(cast(models.Click.clicked_at, Date) >= thirty_days_ago)
+        .group_by(cast(models.Click.clicked_at, Date))
+        .order_by(cast(models.Click.clicked_at, Date))
+    )
+
+    clicks_by_day_result = await db.execute(clicks_by_day_query)
+    clicks_by_day = clicks_by_day_result.all()
+
+    return schemas.AnalyticsData(
+        total_clicks=total_clicks,
+        clicks_by_day=[
+            schemas.DailyClicks(date=row.date, count=row.count) for row in clicks_by_day
+        ],
+    )
