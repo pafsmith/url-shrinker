@@ -7,5 +7,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     SYNC_DATABASE_URL: str
     JWT_SECRET_KEY: str
+    REDIS_URL: str
+
 
 settings = Settings()

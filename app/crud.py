@@ -79,3 +79,24 @@ async def get_user(db: AsyncSession, user_id: int):
     """Fetches a user by their ID."""
     result = await db.execute(select(models.User).filter(models.User.id == user_id))
     return result.scalars().first()
+
+
+async def log_click_to_db(
+    db: AsyncSession, link_id: int, ip_address: str, user_agent: str
+):
+    """Logs a single click event to the database."""
+    db_click = models.Click(
+        link_id=link_id, ip_address=ip_address, user_agent=user_agent
+    )
+
+    try:
+        db.add(db_click)
+
+        link_to_update = await db.get(models.Link, link_id)
+        if link_to_update:
+            link_to_update.visit_count += 1
+
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        print(f"Error logging click: {e}")

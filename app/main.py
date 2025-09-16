@@ -1,11 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import crud, models, schemas, auth
 from .database import SessionLocal, engine
 from .routers import auth as auth_router
-
+from .tasks import log_click_task
 
 # Create the FastAPI app instance
 app = FastAPI(
@@ -45,7 +45,9 @@ async def create_link(
     response_class=RedirectResponse,
     status_code=status.HTTP_307_TEMPORARY_REDIRECT,
 )
-async def redirect_to_url(short_code: str, db: AsyncSession = Depends(get_db)):
+async def redirect_to_url(
+    short_code: str, request: Request, db: AsyncSession = Depends(get_db)
+):
     """
     Redirects to the original URL associated with the short code.
     """
@@ -56,8 +58,9 @@ async def redirect_to_url(short_code: str, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail="Short link not found."
         )
 
-    # TODO: Asynchronously increment the visit_count here.
-
+    log_click_task.send(
+        db_link.id, request.client.host, request.headers.get("user-agent", "Unknown")
+    )
     return RedirectResponse(url=db_link.original_url)
 
 
