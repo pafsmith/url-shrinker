@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     SYNC_DATABASE_URL: str
     JWT_SECRET_KEY: str
     REDIS_URL: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
 
 
 settings = Settings()

@@ -20,7 +20,7 @@ async def create_short_link(
     db: AsyncSession = Depends(get_db),
     current_user: schemas.User = Depends(auth.get_current_user),
 ):
-    return await crud.create_link(db=db, link=link, user_id=current_user.id)
+    return await crud.create_short_link(db=db, link=link, user_id=current_user.id)
 
 
 @router.get("/{short_code}/analytics", response_model=schemas.LinkWithAnalytics)
