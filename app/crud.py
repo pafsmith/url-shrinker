@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from passlib.context import CryptContext
-
+from typing import Union
 from . import models, schemas, utils
 
 
@@ -24,7 +24,9 @@ async def get_link_by_original_url(db: AsyncSession, original_url: str):
     return result.scalar_one_or_none()
 
 
-async def create_short_link(db: AsyncSession, link: schemas.LinkCreate) -> models.Link:
+async def create_short_link(
+    db: AsyncSession, link: schemas.LinkCreate, user_id: Union[int, None] = None
+) -> models.Link:
     """
     Creates a new short link in the database, handling collisions.
     """
@@ -45,7 +47,9 @@ async def create_short_link(db: AsyncSession, link: schemas.LinkCreate) -> model
         short_code = utils.generate_short_code(str(link.original_url), salt)
 
     # 4. Create the new link object.
-    db_link = models.Link(original_url=str(link.original_url), short_code=short_code)
+    db_link = models.Link(
+        original_url=str(link.original_url), short_code=short_code, user_id=user_id
+    )
 
     # 5. Add to session and commit to the database.
     db.add(db_link)
@@ -68,4 +72,10 @@ async def create_user(db: AsyncSession, user: schemas.UserCreate):
 async def get_user_by_email(db: AsyncSession, email: str):
     """Fetches a user by their email address."""
     result = await db.execute(select(models.User).filter(models.User.email == email))
+    return result.scalars().first()
+
+
+async def get_user(db: AsyncSession, user_id: int):
+    """Fetches a user by their ID."""
+    result = await db.execute(select(models.User).filter(models.User.id == user_id))
     return result.scalars().first()

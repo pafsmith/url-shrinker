@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from . import crud, models, schemas
+from . import crud, models, schemas, auth
 from .database import SessionLocal, engine
 from .routers import auth as auth_router
 
@@ -29,11 +29,15 @@ app.include_router(auth_router.router, prefix="/api/auth", tags=["Authentication
 @app.post(
     "/api/links", response_model=schemas.Link, status_code=status.HTTP_201_CREATED
 )
-async def create_link(link: schemas.LinkCreate, db: AsyncSession = Depends(get_db)):
+async def create_link(
+    link: schemas.LinkCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user),
+):
     """
     Create a new shortened link.
     """
-    return await crud.create_short_link(db=db, link=link)
+    return await crud.create_short_link(db=db, link=link, user_id=current_user.id)
 
 
 @app.get(
