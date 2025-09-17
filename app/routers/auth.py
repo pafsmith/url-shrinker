@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, schemas, auth
 from app.database import SessionLocal
+from app.dependencies import rate_limit_dependency
 
 router = APIRouter()
 
@@ -14,7 +15,10 @@ async def get_db():
 
 
 @router.post(
-    "/register", response_model=schemas.User, status_code=status.HTTP_201_CREATED
+    "/register",
+    response_model=schemas.User,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit_dependency)],
 )
 async def register_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_db)):
     db_user = await crud.get_user_by_email(db, email=user.email)
@@ -23,7 +27,11 @@ async def register_user(user: schemas.UserCreate, db: AsyncSession = Depends(get
     return await crud.create_user(db=db, user=user)
 
 
-@router.post("/login", response_model=schemas.Token)
+@router.post(
+    "/login",
+    response_model=schemas.Token,
+    dependencies=[Depends(rate_limit_dependency)],
+)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
 ):

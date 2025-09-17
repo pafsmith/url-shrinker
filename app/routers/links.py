@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, schemas, auth
 from app.database import SessionLocal
+from app.dependencies import rate_limit_dependency
 
 router = APIRouter()
 
@@ -12,7 +13,12 @@ async def get_db():
         yield session
 
 
-@router.post("", response_model=schemas.Link, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=schemas.Link,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit_dependency)],
+)
 async def create_short_link(
     link: schemas.LinkCreate,
     db: AsyncSession = Depends(get_db),

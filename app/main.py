@@ -1,17 +1,33 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from fastapi_limiter import FastAPILimiter
+from contextlib import asynccontextmanager
 from . import crud, cache
 from .database import SessionLocal
 from .routers import auth as auth_router, links as links_router
 from .tasks import log_click_task
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Manage the application's lifespan events for startup and shutdown.
+    """
+    # Initialize the Redis connection pool and the rate limiter on startup
+    await cache.init_redis_pool()
+    await FastAPILimiter.init(cache.redis_pool)
+    yield
+    # Clean up the Redis connection pool on shutdown
+    await cache.close_redis_pool()
+
 
 # Create the FastAPI app instance
 app = FastAPI(
     title="URL Shortener",
     description="A simple URL shortener API built with FastAPI.",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 

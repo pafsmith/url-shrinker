@@ -1,10 +1,31 @@
 import json
 import redis.asyncio as redis
-from typing import Dict, Any, Optional
+from typing import Optional, Dict, Any
 
 from app.config import settings
 
-redis_pool = redis.from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
+redis_pool: Optional[redis.Redis] = None
+
+
+async def init_redis_pool():
+    """
+    Initializes the Redis connection pool.
+    This is called once when the FastAPI application starts.
+    """
+    global redis_pool
+    if redis_pool is None:
+        redis_pool = redis.from_url(
+            settings.REDIS_URL, encoding="utf-8", decode_responses=True
+        )
+
+
+async def close_redis_pool():
+    """
+    Closes the Redis connection pool.
+    This is called once when the FastAPI application shuts down.
+    """
+    if redis_pool:
+        await redis_pool.close()
 
 
 async def get_link_from_cache(short_code: str) -> Optional[Dict[str, Any]]:
