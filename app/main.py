@@ -1,11 +1,14 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Request
-from fastapi.responses import RedirectResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi_limiter import FastAPILimiter
 from contextlib import asynccontextmanager
-from . import crud, cache
+
+from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
+from fastapi_limiter import FastAPILimiter
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from . import cache, crud
 from .database import SessionLocal
-from .routers import auth as auth_router, links as links_router
+from .routers import auth as auth_router
+from .routers import links as links_router
 from .tasks import log_click_task
 
 

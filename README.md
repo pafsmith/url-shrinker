@@ -2,7 +2,7 @@
 
 A high-performance URL shortener API built with FastAPI, SQLAlchemy, and Alembic. This project provides a simple and efficient way to create short links and redirect users to the original URL, with a focus on clean code, modern practices, and asynchronous performance.
 
-Live Demo URL: [https://shrink.psmithdev.com/docs]
+Live Demo URL: [https://shrink.pafsmith.dev/docs]
 
 ##  Key Features
 
